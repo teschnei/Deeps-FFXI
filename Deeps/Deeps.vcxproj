@@ -97,7 +97,7 @@
     <None Include="Exports.def" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Deeps.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Deeps.h" />
