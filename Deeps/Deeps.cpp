@@ -90,7 +90,7 @@ ExtensionInterfaceData __stdcall Deeps::GetExtensionData()
 bool __stdcall Deeps::HandleCommand(const char* szCommand, int iType)
 {
 	//ignore none typed commands
-	/*if(iType == 0)
+	if(iType == 0)
 		return false;
 
 	char szClean[1024];
@@ -107,52 +107,14 @@ bool __stdcall Deeps::HandleCommand(const char* szCommand, int iType)
 	{
 		if(cmdParse->GetNextCommand(&arg));
 		{
-			if(arg == "lock")
+			if(arg == "reset")
 			{
-				locked = true;
-				m_AshitaCore->GetDataModule()->AddChatLine(5,"Other character appearances: Locked");
-				return true;
-			}
-			else if(arg == "unlock")
-			{
-				locked = false;
-				m_AshitaCore->GetDataModule()->AddChatLine(5,"Other character appearance: Unlocked");
-				return true;
-			}
-			else if(arg == "selflock")
-			{
-				selflock = true;
-				m_AshitaCore->GetDataModule()->AddChatLine(5,"Own Appearance: Locked");
-				return true;
-			}
-			else if(arg == "selfunlock")
-			{
-				selflock = false;
-				m_AshitaCore->GetDataModule()->AddChatLine(5,"Own Appearance: Unlocked");
-				return true;
-			}
-			else if(arg == "invislock")
-			{
-				invisflag = true;
-				m_AshitaCore->GetDataModule()->AddChatLine(5,"Invisibility Flag: Locked");
-				return true;
-			}
-			else if(arg == "invisunlock")
-			{
-				invisflag = false;
-				m_AshitaCore->GetDataModule()->AddChatLine(5,"Invisibility Flag: Unlocked");
-				return true;
-			}
-			else if(arg == "reset")
-			{
-				locked = false;
-				selflock = false;
-				invisflag = false;
-				m_AshitaCore->GetDataModule()->AddChatLine(5,"All locks disabled");
+				memset(m_Deeps, 0, sizeof(m_Deeps));
+				m_AshitaCore->GetDataModule()->AddChatLine(5,"Deeps: Meters reset.");
 				return true;
 			}
 		}
-	}*/
+	}
 	return false;
 }
 
