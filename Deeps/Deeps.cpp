@@ -139,7 +139,6 @@ bool __stdcall Deeps::HandleIncomingPacket(unsigned int uiSize, void* pData)
 		{
 			if (targetNum == 1 && actionNum > 0) //single target spells, auto attack rounds
 			{
-				uint32_t targetID = (uint32_t)(dataTools->unpackBitsBE((unsigned char*)pData, 118, 32));
 				for (int i=0; i<actionNum; i++)
 				{
 					damage += (uint16_t)(dataTools->unpackBitsBE((unsigned char*)pData, startBit + 63, 17));
