@@ -148,6 +148,15 @@ bool validMessage(uint16_t messageID)
 	return false;
 }
 
+void printSourceLine(damage_t* source, std::ofstream& logFile, char* header)
+{
+    if (source->count != 0)
+    {
+        logFile << std::setw(7) << header << std::setw(12) << source->total << std::setw(12) << source->total / source->count
+                << std::setw(12) << source->min << std::setw(12) << source->max << std::setw(12) << source->count << std::endl;
+    }
+}
+
 int __stdcall Deeps::Load(IAshitaCore* mAshitaCore, DWORD ExtensionID)
 {
 	m_AshitaCore = mAshitaCore;
@@ -222,7 +231,9 @@ bool __stdcall Deeps::HandleCommand(const char* szCommand, int iType)
 			else if(arg == "flush")
 			{
 				std::ofstream logFile;
-				logFile.open(OUTPUT_FILE, std::ios::out | std::ios::trunc);
+                char logPath[MAX_PATH];
+                sprintf_s(logPath, MAX_PATH, "%S\\Extensions\\%s", m_AshitaCore->AshitaInstallPath, OUTPUT_FILE);
+				logFile.open(logPath, std::ios::out | std::ios::trunc);
 
 				if (logFile.is_open())
 				{
@@ -256,15 +267,15 @@ bool __stdcall Deeps::HandleCommand(const char* szCommand, int iType)
 							sourceDamage += source.guard.total;
 
 							logFile << source.name << " - " << sourceDamage << " - " << (sourceDamage*100)/(totalDamage == 0 ? 1 : totalDamage) << "%\n";
-							logFile.width(12);
-							logFile << std::setw(7) << "" << "Total" << "Avg" << "Min" << "Max" << "Count";
-							logFile << std::setw(7) << "Hit" << source.hit.total << source.hit.total / (source.hit.count == 0 ? 1 : source.hit.count) << source.hit.min << source.hit.max << source.hit.count;
-							logFile << std::setw(7) << "Crit" << source.crit.total << source.crit.total / (source.crit.count == 0 ? 1 : source.crit.count) << source.crit.min << source.crit.max << source.crit.count;
-							logFile << std::setw(7) << "Miss" << source.miss.total << source.miss.total / (source.miss.count == 0 ? 1 : source.miss.count) << source.miss.min << source.miss.max << source.miss.count;
-							logFile << std::setw(7) << "Evade" << source.evade.total << source.evade.total / (source.evade.count == 0 ? 1 : source.evade.count) << source.evade.min << source.evade.max << source.evade.count;
-							logFile << std::setw(7) << "Parry" << source.parry.total << source.parry.total / (source.parry.count == 0 ? 1 : source.parry.count) << source.parry.min << source.parry.max << source.parry.count;
-							logFile << std::setw(7) << "Block" << source.block.total << source.block.total / (source.block.count == 0 ? 1 : source.block.count) << source.block.min << source.block.max << source.block.count;
-							logFile << std::setw(7) << "Guard" << source.guard.total << source.guard.total / (source.guard.count == 0 ? 1 : source.guard.count) << source.guard.min << source.guard.max << source.guard.count;
+							//logFile.width(12);
+							logFile << std::setw(19) << "Total" << std::setw(12) << "Avg" << std::setw(12) << "Min" << std::setw(12) << "Max" << std::setw(12) << "Count" << std::endl;
+                            printSourceLine(&source.hit, logFile, "Hit");
+                            printSourceLine(&source.crit, logFile, "Crit");
+                            printSourceLine(&source.miss, logFile, "Miss");
+                            printSourceLine(&source.evade, logFile, "Evade");
+                            printSourceLine(&source.parry, logFile, "Parry");
+                            printSourceLine(&source.block, logFile, "Block");
+                            printSourceLine(&source.guard, logFile, "Guard");
 							logFile << std::endl;
 							sourcesIt++;
 						}
@@ -312,7 +323,7 @@ bool __stdcall Deeps::HandleIncomingPacket(unsigned int uiSize, void* pData)
 		else
 		{
             entity_info_t newentityInfo;
-			newentityInfo.name = m_AshitaCore->GetDataModule()->GetParty()->Member[0].Name;
+			newentityInfo.name = m_AshitaCore->GetDataModule()->GetEntityList()->Find(userID)->Name;
             entityInfo = &damageInfo.insert(std::make_pair(userID, newentityInfo)).first->second;
 		}
 

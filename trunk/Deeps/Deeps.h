@@ -46,6 +46,7 @@
 #define WBUFF(p,pos) (*(float*)WBUFP((p),(pos)))
 
 #define OUTPUT_FILE "deeps.log"
+#define MAX_PATH 260
 
 enum REACTION
 {
