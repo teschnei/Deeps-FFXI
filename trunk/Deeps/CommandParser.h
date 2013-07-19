@@ -1,6 +1,9 @@
 #include <vector>
 #include <stdint.h>
 
+#ifndef _CMDPARSER
+#define _CMDPARSER
+
 class CommandParser
 {
 private:
@@ -77,3 +80,5 @@ unsigned int CommandParser::GetArgCount()
 {
 	return argC;
 }
+
+#endif
