@@ -142,7 +142,7 @@ bool validMessage(uint16_t messageID)
 {
 	for (int i = 0; i < ARRAYSIZE(validMessages); i++)
 	{
-		if (validMessages[i] = messageID)
+		if (validMessages[i] == messageID)
 			return true;
 	}
 	return false;
@@ -163,24 +163,6 @@ int __stdcall Deeps::Load(IAshitaCore* mAshitaCore, DWORD ExtensionID)
 	cmdParse = new CommandParser;
 
 	m_Deeps = new party_deeps_t[18];
-	IParty* party = m_AshitaCore->GetDataModule()->GetParty();
-	for (int i = 0; i < 18; i++)
-	{
-		char Meters_String[256] = "";
-		sprintf_s(Meters_String, 256, "_Meters[%d]", i);
-		m_Meters[i] = m_AshitaCore->GetDirectxModule()->GetTextObjectManager()->CreateTextObject(Meters_String);
-		m_Meters[i]->SetFont("Courier",8);
-		m_Meters[i]->SetLocation((float)(m_AshitaCore->GetGameSettings()->ResolutionX - 300), (float)(m_AshitaCore->GetGameSettings()->ResolutionY - (100 + i*30)));
-		m_Meters[i]->SetBGColor(255,0,0,0);
-		m_Meters[i]->SetBGVisibility(true);
-		m_Meters[i]->SetColor(255, 255, 255, 255);
-		m_Meters[i]->SetBold(true);
-        m_Deeps[i].id = party->Member[i].ID;
-		if (m_Deeps[i].id == 0)
-		{
-			m_Meters[i]->SetVisibility(false);
-		}
-	}
 
 	return 1;
 }
@@ -300,7 +282,7 @@ bool __stdcall Deeps::HandleIncomingPacket(unsigned int uiSize, void* pData)
 
 	IResources* resources = m_AshitaCore->GetResources();
 
-	if(packetType == 0x28)
+	if(packetType == 0x28) //action
 	{
 		IDataTools* dataTools = m_AshitaCore->GetDataModule()->GetDataTools();
 		uint8_t actionNum = (uint8_t)(dataTools->unpackBitsBE((unsigned char*)pData, 182, 4));
@@ -423,7 +405,7 @@ bool __stdcall Deeps::HandleIncomingPacket(unsigned int uiSize, void* pData)
 			}
 		}
 	} 
-	else if (packetType == 0x0E) 
+	else if (packetType == 0x0E) //entity_update
 	{
 		uint32_t mobId = RBUFL(pData,(0x04));
 		uint32_t claimId = RBUFL(pData,(0x2C));
@@ -455,11 +437,111 @@ bool __stdcall Deeps::HandleIncomingPacket(unsigned int uiSize, void* pData)
 			}
 		}
 	}
+    else if (packetType == 0xC8) //party_define
+    {
+        //need to reassign everything
+
+        bool accounted[18];
+        memset(accounted, 0, sizeof(accounted));
+
+        for (int i = 0; i < 17; i++)
+        {
+            uint32_t id = RBUFL(pData, 12*i + (0x08));
+            uint8_t partyflags = RBUFW(pData, 12*i + (0x0E));
+            if (id != 0)
+            {
+                if (partyflags & 0x01)
+                {
+                    //first alliance party
+                    for (int j = 6; j < 12; j++)
+                    {
+                        if(m_Deeps[j].id == id)
+                        {
+                            if (j != i)
+                            {
+                                party_deeps_t temp = m_Deeps[j];
+                                m_Deeps[j] = m_Deeps[i];
+                                m_Deeps[i] = temp;
+                            }
+                            accounted[i] = true;
+                        }
+                    }
+                }
+                else if (partyflags & 0x02)
+                {
+                    //second alliance party
+                    for (int j = 12; j < 18; j++)
+                    {
+                        if(m_Deeps[j].id == id)
+                        {
+                            if (j != i)
+                            {
+                                party_deeps_t temp = m_Deeps[j];
+                                m_Deeps[j] = m_Deeps[i];
+                                m_Deeps[i] = temp;
+                            }
+                            accounted[i] = true;
+                        }
+                    }
+                }
+                else
+                {
+                    //players party
+                    for (int j = 0; j < 6; j++)
+                    {
+                        if(m_Deeps[j].id == id)
+                        {
+                            if (j != i)
+                            {
+                                party_deeps_t temp = m_Deeps[j];
+                                m_Deeps[j] = m_Deeps[i];
+                                m_Deeps[i] = temp;
+                            }
+                            accounted[i] = true;
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < 17; i++)
+        {
+            if (accounted[i] == false && m_Deeps[i].id != 0)
+            {
+                m_Deeps[i].reset();
+            }
+        }
+    }
 	return false;
 }
 
 bool __stdcall Deeps::DxSetup(IDirect3DDevice8* mDevice)
 {
+	IParty* party = m_AshitaCore->GetDataModule()->GetParty();
+	for (int i = 0; i < 18; i++)
+	{
+		char Meters_String[256] = "";
+		sprintf_s(Meters_String, 256, "_Meters[%d]", i);
+		m_Meters[i] = m_AshitaCore->GetDirectxModule()->GetTextObjectManager()->CreateTextObject(Meters_String);
+		m_Meters[i]->SetFont("Courier",10);
+		m_Meters[i]->SetBGColor(255,0,0,0);
+		m_Meters[i]->SetBGVisibility(false);
+		m_Meters[i]->SetColor(255, 255, 255, 255);
+		m_Meters[i]->SetBold(false);
+        m_Deeps[i].id = party->Member[i].ID;
+		if (m_Deeps[i].id == 0)
+		{
+			m_Meters[i]->SetVisibility(false);
+		}
+        if ( i < 6 )
+        {
+            auto membercount = party->Member[0].Alliance->Party0Count;
+		    m_Meters[i]->SetLocation((float)(m_AshitaCore->GetGameSettings()->ResolutionX - 310), (float)(m_AshitaCore->GetGameSettings()->ResolutionY - (30 + (membercount - 1 - i)*22)));
+        }
+        else
+        {
+            m_Meters[i]->SetLocation((float)(m_AshitaCore->GetGameSettings()->ResolutionX - 310), (float)(m_AshitaCore->GetGameSettings()->ResolutionY - (50 + i*25)));
+        }
+	}
 	return true;
 }
 
@@ -497,9 +579,24 @@ void __stdcall Deeps::DxRender()
 			}
 			m_Deeps[i].lastactiontime = currentTime;
 		}
-		char Meters_String[256] = "";
-		sprintf_s(Meters_String, 256, "Damage: %llu\nDPS: %.1f", m_Deeps[i].total, m_Deeps[i].total / (float)m_Deeps[i].battletime);
-		m_Meters[i]->SetText(Meters_String);
+        if(m_AshitaCore->GetDataModule()->GetParty()->Member[i].Active)
+        {
+		    char Meters_String[256] = "";
+		    sprintf_s(Meters_String, 256, "DMG: %7llu DPS: %4.1f", m_Deeps[i].total, m_Deeps[i].total / (float)m_Deeps[i].battletime);
+		    m_Meters[i]->SetText(Meters_String);
+            m_Meters[i]->SetVisibility(true);
+        }
+        else
+        {
+            m_Meters[i]->SetVisibility(false);
+            int j = i;
+            while (j != 5 && j != 11 && j != 17 && m_Deeps[i+1].id != 0)
+            {
+                m_Deeps[j] = m_Deeps[j+1];
+                j++;
+            }
+            m_Deeps[j].reset();
+        }
 	}
 	m_Counter++;
 }

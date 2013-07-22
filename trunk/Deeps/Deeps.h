@@ -87,6 +87,13 @@ struct party_deeps_t
 		battletime = 1;
 		lastactiontime = 0;
 	}
+    void reset()
+    {
+        id = 0;
+		total = 0;
+		battletime = 1;
+		lastactiontime = 0;
+    }
 };
 
 struct damage_t
