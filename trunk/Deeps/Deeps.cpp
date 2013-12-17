@@ -404,6 +404,14 @@ bool __stdcall Deeps::HandleIncomingPacket(unsigned int uiSize, void* pData)
 				m_Deeps[index].total += damage;
 			}
 		}
+        if (actionType == 11 || actionType == 3)
+        {
+            uint8_t knockback = (uint8_t)(dataTools->unpackBitsBE((unsigned char*)pData, 209, 4));
+            uint16_t animation = (uint16_t)(dataTools->unpackBitsBE((unsigned char*)pData, 191, 12));
+            char line[256];
+            sprintf(line, "Knockback: %d Animation: %d\n", knockback, animation);
+            m_AshitaCore->GetDataModule()->AddChatLine(5, line);
+        }
 	} 
 	else if (packetType == 0x0E) //entity_update
 	{
@@ -444,10 +452,10 @@ bool __stdcall Deeps::HandleIncomingPacket(unsigned int uiSize, void* pData)
         bool accounted[18];
         memset(accounted, 0, sizeof(accounted));
 
-        for (int i = 0; i < 17; i++)
+        for (int i = 1; i < 18; i++)
         {
-            uint32_t id = RBUFL(pData, 12*i + (0x08));
-            uint8_t partyflags = RBUFW(pData, 12*i + (0x0E));
+            uint32_t id = RBUFL(pData, 12*(i-1) + (0x08));
+            uint8_t partyflags = RBUFW(pData, 12*(i-1) + (0x0E));
             if (id != 0)
             {
                 if (partyflags & 0x01)
@@ -486,8 +494,8 @@ bool __stdcall Deeps::HandleIncomingPacket(unsigned int uiSize, void* pData)
                 }
                 else
                 {
-                    //players party
-                    for (int j = 0; j < 6; j++)
+                    //players party - exclude player
+                    for (int j = 1; j < 6; j++)
                     {
                         if(m_Deeps[j].id == id)
                         {
@@ -598,6 +606,22 @@ void __stdcall Deeps::DxRender()
             m_Deeps[j].reset();
         }
 	}
+
+    IParty* party = m_AshitaCore->GetDataModule()->GetParty();
+
+	for (int i = 0; i < 18; i++)
+	{
+        if ( i < 6 )
+        {
+            auto membercount = party->Member[0].Alliance->Party0Count;
+		    m_Meters[i]->SetLocation((float)(m_AshitaCore->GetGameSettings()->ResolutionX - 310), (float)(m_AshitaCore->GetGameSettings()->ResolutionY - (30 + (membercount - 1 - i)*22)));
+        }
+        else
+        {
+            m_Meters[i]->SetLocation((float)(m_AshitaCore->GetGameSettings()->ResolutionX - 310), (float)(m_AshitaCore->GetGameSettings()->ResolutionY - (50 + i*25)));
+        }
+	}
+
 	m_Counter++;
 }
 
