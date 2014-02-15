@@ -75,8 +75,8 @@ damage_type_t* Deeps::getDamageSource(entity_info_t* entityInfo, uint8_t actionT
 			sprintf_s(name, 20, "WS: %d", actionID);
 			source->name.append(name);
 		}
-		else if (actionType == 4) { source->name.append(m_AshitaCore->GetResources()->GetSpellByID(actionID)->Name); }
-		else if (actionType == 6 || actionType == 14 || actionType == 15) { source->name.append(m_AshitaCore->GetResources()->GetAbilityByID(actionID)->Name); }
+		else if (actionType == 4) { source->name.append(m_AshitaCore->GetResources()->GetSpellByID(actionID)->Name[2]); }
+		else if (actionType == 6 || actionType == 14 || actionType == 15) { source->name.append(m_AshitaCore->GetResources()->GetAbilityByID(actionID)->Name[2]); }
 
 	}
 	return source;
@@ -309,7 +309,7 @@ bool __stdcall Deeps::HandleIncomingPacket(unsigned int uiSize, void* pData)
             entityInfo = &damageInfo.insert(std::make_pair(userID, newentityInfo)).first->second;
 		}
 
-		if ((actionType >= 1 && actionType <= 4) || (actionType == 6) || (actionType == 11) || (actionType == 14) || (actionType == 15))
+        if ((actionType >= 1 && actionType <= 4) || (actionType == 6) || (actionType == 11) || (actionType == 13) || (actionType == 14) || (actionType == 15))
 		{
 			if (targetNum == 1 && actionNum > 0) //single target spells, auto attack rounds
 			{
@@ -404,14 +404,19 @@ bool __stdcall Deeps::HandleIncomingPacket(unsigned int uiSize, void* pData)
 				m_Deeps[index].total += damage;
 			}
 		}
-        if (actionType == 11 || actionType == 3)
+        /*if (actionType == 11 || actionType == 3 || actionType == 13)
         {
-            uint8_t knockback = (uint8_t)(dataTools->unpackBitsBE((unsigned char*)pData, 209, 4));
+            uint8_t speceffect = (uint8_t)(dataTools->unpackBitsBE((unsigned char*)pData, 203, 7));
+            uint8_t knockback = (uint8_t)(dataTools->unpackBitsBE((unsigned char*)pData, 210, 3));
             uint16_t animation = (uint16_t)(dataTools->unpackBitsBE((unsigned char*)pData, 191, 12));
+            uint32_t param = (uint32_t)(dataTools->unpackBitsBE((unsigned char*)pData, 213, 17));
+            uint16_t id = (uint16_t)(dataTools->unpackBitsBE((unsigned char*)pData, 54+32, 12));
             char line[256];
-            sprintf(line, "Knockback: %d Animation: %d\n", knockback, animation);
+            sprintf(line, "ActionType: %d ID: %d Knockback: %d Animation: %d\n", actionType, id, knockback, animation);
             m_AshitaCore->GetDataModule()->AddChatLine(5, line);
-        }
+            sprintf(line, "Speceffect: %d, Param: %d\n", speceffect, param);
+            m_AshitaCore->GetDataModule()->AddChatLine(5, line);
+        }*/
 	} 
 	else if (packetType == 0x0E) //entity_update
 	{
