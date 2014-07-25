@@ -198,6 +198,7 @@ bool Deeps::HandleCommand(const char* pszCommand, int nCommandType)
 							if (entity.second.name == args[2])
 							{
 								m_charInfo = entity.first;
+								break;
 							}
 						}
 					}
@@ -220,6 +221,10 @@ bool Deeps::HandleCommand(const char* pszCommand, int nCommandType)
 						m_sourceInfo.clear();
 					}
 				}
+			}
+			else if (args[1] == "reset")
+			{
+				entities.clear();
 			}
 		}
 		return true;
