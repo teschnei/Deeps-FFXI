@@ -1,6 +1,0 @@
-LOTUS
-
-Auto-Attack - 63211 - 63%
-            Total        Avg        Min          Max        Count
-Hit         54222        322          0          410           37
-Crit         6110        512	      0          813           14
