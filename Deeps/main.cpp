@@ -186,47 +186,11 @@ bool Deeps::HandleCommand(const char* pszCommand, int nCommandType)
 	if (count <= 0) return false;
 	HANDLECOMMAND("/deeps", "/dps")
 	{
-		if (count >= 2)
+		if (args[1] == "reset")
 		{
-			if (args[1] == "info")
-			{
-				if (m_charInfo == 0)
-				{
-					if (count >= 3)
-					{
-						for (auto entity : entities)
-						{
-							if (entity.second.name == args[2])
-							{
-								m_charInfo = entity.first;
-								break;
-							}
-						}
-					}
-				}
-				else
-				{
-					if (m_sourceInfo == "")
-					{
-						if (count >= 3)
-						{
-							m_sourceInfo.assign(args[2]);
-						}
-						else
-						{
-							m_charInfo = 0;
-						}
-					}
-					else
-					{
-						m_sourceInfo.clear();
-					}
-				}
-			}
-			else if (args[1] == "reset")
-			{
-				entities.clear();
-			}
+			entities.clear();
+            m_sourceInfo.clear();
+            m_charInfo = 0;
 		}
 		return true;
 	}
@@ -462,6 +426,7 @@ void Deeps::Direct3DRender(void)
 
         int i = 0;
         uint64_t max = 0;
+        clickMap.clear();
 		for (auto e : temp)
 		{
             char name[32];
@@ -472,6 +437,7 @@ void Deeps::Direct3DRender(void)
             char string[256];
 			sprintf_s(string, 256, " %-9.9s %6llu %03.1f%%\n", e.name.c_str(), e.total(), total == 0 ? 0 : 100 * ((float)e.total() / (float)total));
             bar->SetText(string);
+            clickMap.insert(std::pair<IFontObject*, std::string>(bar, e.name));
             i++;
 		}
 	}
@@ -501,6 +467,7 @@ void Deeps::Direct3DRender(void)
                 repairBars(deepsBase, temp.size());
                 int i = 0;
                 uint64_t max = 0;
+                clickMap.clear();
 				for (auto s : temp)
 				{
                     char name[32];
@@ -511,6 +478,7 @@ void Deeps::Direct3DRender(void)
                     char string[256];
 					sprintf_s(string, 256, " %-9.9s %7llu %03.1f%%\n", s.name.c_str(), s.total(), total == 0 ? 0 : 100 * ((float)s.total() / (float)total));
                     bar->SetText(string);
+                    clickMap.insert(std::pair<IFontObject*, std::string>(bar, s.name));
                     i++;
 				}
 			}
@@ -603,8 +571,55 @@ void Deeps::repairBars(IFontObject* deepsBase, uint8_t size)
             bar->GetBackground()->SetWidth(254);
             bar->GetBackground()->SetHeight(13);
             bar->SetVisibility(true);
+            bar->SetClickFunction(g_onClick);
             m_bars++;
             previous = bar;
+        }
+    }
+}
+
+void Deeps::onClick(int type, IFontObject* font, float xPos, float yPos)
+{
+    if (m_charInfo == 0)
+    {
+        //Char was clicked
+        if (type == 0)
+        {
+            // left click
+            auto name = clickMap.at(font);
+            for (auto entity : entities)
+            {
+                if (entity.second.name == name)
+                {
+                    m_charInfo = entity.first;
+                    break;
+                }
+            }
+        }
+    }
+    else
+    {
+        if (m_sourceInfo == "")
+        {
+            //source was clicked
+            if (type == 1)
+            {
+                //right click
+                m_charInfo = 0;
+            }
+            else if (type == 0)
+            {
+                auto name = clickMap.at(font);
+                m_sourceInfo.assign(name);
+            }
+        }
+        else
+        {
+            //damage record was clicked
+            if (type == 1)
+            {
+                m_sourceInfo.clear();
+            }
         }
     }
 }
@@ -645,4 +660,9 @@ __declspec(dllexport) IPlugin* __stdcall CreatePlugin(char* pszReserved)
 {
     UNREFERENCED_PARAMETER(pszReserved);
 	return (IPlugin*)new Deeps();
+}
+
+void g_onClick(int type, void* font, float xPos, float yPos)
+{
+    g_Deeps->onClick(type, (IFontObject*)font, xPos, yPos);
 }

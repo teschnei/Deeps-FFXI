@@ -128,9 +128,12 @@ struct entitysources_t
 };
 
 std::map<uint32_t, entitysources_t> entities;
+std::map<IFontObject*, std::string> clickMap;
 
 static const uint16_t validMessages[] = { 1, 2, 14, 15, 30, 31, 32, 33, 67, 69, 70, 77, 157, 158, 185, 187, 188, 189, 197, 227, 245, 248, 252, 264, 265,
 										  274, 281, 282, 283, 317, 323, 324, 352, 353, 354, 355, 379, 413, 522, 535, 536, 576, 577 };
+
+void g_onClick(int, void*, float, float);
 
 /**
  * @brief Global copy of our plugin data.
@@ -186,6 +189,7 @@ public:
     void Direct3DRelease(void);
     void Direct3DPreRender(void);
     void Direct3DRender(void);
+    void onClick(int, IFontObject*, float, float);
 };
 
 // Global pointer to this
