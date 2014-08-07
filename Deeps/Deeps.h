@@ -130,8 +130,11 @@ struct entitysources_t
 std::map<uint32_t, entitysources_t> entities;
 std::map<IFontObject*, std::string> clickMap;
 
-static const uint16_t validMessages[] = { 1, 2, 14, 15, 30, 31, 32, 33, 67, 69, 70, 77, 157, 158, 185, 187, 188, 189, 197, 227, 245, 248, 252, 264, 265,
-										  274, 281, 282, 283, 317, 323, 324, 352, 353, 354, 355, 379, 413, 522, 535, 536, 576, 577 };
+static const std::vector<uint16_t> hitMessages = {1, 2, 77, 132, 157, 161, 163, 185, 187, 197, 227, 264, 281, 317, 352, 413, 522, 576, 577};
+static const std::vector<uint16_t> critMessages = { 67, 252, 265, 274, 353, 379 };
+static const std::vector<uint16_t> missMessages = { 15, 85, 158, 188, 245, 284, 324, 354 };
+static const std::vector<uint16_t> evadeMessages = { 14, 30, 31, 32, 33, 189, 248, 282, 283, 323, 355 };
+static const std::vector<uint16_t> parryMessages = { 69, 70 };
 
 void g_onClick(int, void*, float, float);
 
@@ -157,7 +160,7 @@ class Deeps : PluginBase
 
 private:
 	source_t* getDamageSource(entitysources_t* entityInfo, uint8_t actionType, uint16_t actionID);
-	void updateDamageSource(source_t* source, uint8_t reaction, uint8_t speceffect, uint32_t damage);
+	bool updateDamageSource(source_t* source, uint16_t message, uint32_t damage);
     void repairBars(IFontObject* deepsBase, uint8_t size);
 	uint16_t getIndex(std::function<bool(IEntity*, int)>);
 	uint32_t m_charInfo;

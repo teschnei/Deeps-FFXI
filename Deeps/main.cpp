@@ -48,48 +48,38 @@ source_t* Deeps::getDamageSource(entitysources_t* entityInfo, uint8_t actionType
 	return source;
 }
 
-void Deeps::updateDamageSource(source_t* source, uint8_t reaction, uint8_t speceffect, uint32_t damage)
+bool Deeps::updateDamageSource(source_t* source, uint16_t message, uint32_t damage)
 {
 	damage_t* type = NULL;
-	if (reaction == REACTION_MISS)
+    if (std::find(hitMessages.begin(), hitMessages.end(), message) != hitMessages.end())
+    {
+        type = &source->damage["Hit"];
+    }
+    else if (std::find(critMessages.begin(), critMessages.end(), message) != critMessages.end())
+	{
+		type = &source->damage["Crit"];
+	}
+    else if (std::find(missMessages.begin(), missMessages.end(), message) != missMessages.end())
 	{
 		type = &source->damage["Miss"];
 	}
-	else if (reaction == REACTION_PARRY)
+    else if (std::find(evadeMessages.begin(), evadeMessages.end(), message) != evadeMessages.end())
+    {
+        type = &source->damage["Evade"];
+    }
+    else if (std::find(parryMessages.begin(), parryMessages.end(), message) != parryMessages.end())
 	{
-		type = &source->damage["Parry"];;
+		type = &source->damage["Parry"];
 	}
-	else if (reaction == REACTION_BLOCK)
-	{
-		type = &source->damage["Block"];;
-	}
-	else if (reaction == REACTION_HIT || reaction == REACTION_HIT2)
-	{
-		if (speceffect == SPECEFFECT_CRITICAL_HIT)
-		{
-			type = &source->damage["Crit"];;
-		}
-		else
-		{
-			type = &source->damage["Hit"];;
-		}
-	}
-	else if (reaction == REACTION_GUARD)
-	{
-		type = &source->damage["Guard"];;
-	}
-	else if (reaction == REACTION_EVADE)
-	{
-		type = &source->damage["Evade"];;
-	}
-	else
-	{
-		type = &source->damage["Hit"];;
-	}
-	type->total += damage;
-	type->count++;
-	type->min = (damage < type->min ? damage : type->min);
-	type->max = (damage > type->max ? damage : type->max);
+    if (type)
+    {
+        type->total += damage;
+        type->count++;
+        type->min = (damage < type->min ? damage : type->min);
+        type->max = (damage > type->max ? damage : type->max);
+        return true;
+    }
+    return false;
 }
 
 uint16_t Deeps::getIndex(std::function<bool(IEntity*, int)> func)
@@ -102,16 +92,6 @@ uint16_t Deeps::getIndex(std::function<bool(IEntity*, int)> func)
 		}
 	}
 	return 0;
-}
-
-bool validMessage(uint16_t messageID)
-{
-	for (int i = 0; i < ARRAYSIZE(validMessages); i++)
-	{
-		if (validMessages[i] == messageID)
-			return true;
-	}
-	return false;
 }
 
 /**
@@ -277,9 +257,8 @@ bool Deeps::HandleIncomingPacket(unsigned int uiPacketId, unsigned int uiPacketS
 						uint8_t reaction = (uint8_t)(unpackBitsBE((unsigned char*)pData, startBit + 36, 5));
 						uint8_t speceffect = (uint8_t)(unpackBitsBE((unsigned char*)pData, startBit + 53, 9));
 
-						bool valid = validMessage(messageID);
-						if (valid)
-							updateDamageSource(source, reaction, speceffect, mainDamage);
+                        if (!updateDamageSource(source, messageID, mainDamage))
+                            return false;
 
 						if ((unpackBitsBE((unsigned char*)pData, startBit + 121, 2) & 0x1) && actionType != 6)
 						{
