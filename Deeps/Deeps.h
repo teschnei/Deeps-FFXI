@@ -139,10 +139,10 @@ static const std::vector<uint16_t> parryMessages = { 69, 70 };
 
 static const std::vector<D3DCOLOR> Colors = { D3DCOLOR_ARGB(255, 12, 0, 155), D3DCOLOR_ARGB(255, 140, 0, 0), D3DCOLOR_ARGB(255, 255, 177, 32), D3DCOLOR_ARGB(255, 143, 143, 143),
                                               D3DCOLOR_ARGB(255, 68, 68, 68), D3DCOLOR_ARGB(255, 255, 0, 0), D3DCOLOR_ARGB(255, 0, 164, 49), D3DCOLOR_ARGB(255, 198, 198, 0), 
-                                              D3DCOLOR_ARGB(255, 116, 0, 145), D3DCOLOR_ARGB(255, 165, 153, 10), D3DCOLOR_ARGB(255, 184, 128, 10), D3DCOLOR_ARGB(255, 47, 234, 0), 
+                                              D3DCOLOR_ARGB(255, 116, 0, 145), D3DCOLOR_ARGB(255, 165, 153, 10), D3DCOLOR_ARGB(255, 184, 128, 10), D3DCOLOR_ARGB(255, 224, 0, 230),
                                               D3DCOLOR_ARGB(255, 234, 100, 0), D3DCOLOR_ARGB(255, 119, 0, 0), D3DCOLOR_ARGB(255, 130, 17, 255), D3DCOLOR_ARGB(255, 79, 196, 0),
-                                              D3DCOLOR_ARGB(255, 0, 16, 217), D3DCOLOR_ARGB(255, 136, 68, 0), D3DCOLOR_ARGB(255, 244, 98, 0), D3DCOLOR_ARGB(255, 15, 219, 255),
-                                              D3DCOLOR_ARGB(255, 0, 123, 145), D3DCOLOR_ARGB(255, 224, 0, 230) };
+                                              D3DCOLOR_ARGB(255, 0, 16, 217), D3DCOLOR_ARGB(255, 136, 68, 0), D3DCOLOR_ARGB(255, 244, 98, 0), D3DCOLOR_ARGB(255, 15, 190, 220),
+                                              D3DCOLOR_ARGB(255, 0, 123, 145) };
 
 void g_onClick(int, void*, float, float);
 

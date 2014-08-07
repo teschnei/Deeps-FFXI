@@ -133,6 +133,7 @@ bool Deeps::Initialize(IAshitaCore* ashitaCore, DWORD dwPluginId)
     this->m_AshitaCore = ashitaCore;
     this->m_PluginId = dwPluginId;
     g_Deeps = this;
+    srand(time(NULL));
 
 	m_charInfo = 0;
     m_bars = 0;
