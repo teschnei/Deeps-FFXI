@@ -151,8 +151,10 @@ bool Deeps::Initialize(IAshitaCore* ashitaCore, DWORD dwPluginId)
     // Store the variables we are passed..
     this->m_AshitaCore = ashitaCore;
     this->m_PluginId = dwPluginId;
+    g_Deeps = this;
 
 	m_charInfo = 0;
+    m_bars = 0;
 
     return true;
 }
@@ -167,7 +169,6 @@ bool Deeps::Initialize(IAshitaCore* ashitaCore, DWORD dwPluginId)
  */
 void Deeps::Release(void)
 {
-	m_AshitaCore->GetFontManager()->DeleteFontObject("Deeps");
 }
 
 /**
@@ -393,11 +394,14 @@ bool Deeps::Direct3DInitialize(IDirect3DDevice8* lpDevice)
 {
     this->m_Direct3DDevice = lpDevice;
 
-	IFontObject* font = m_AshitaCore->GetFontManager()->CreateFontObject("Deeps");
+	IFontObject* font = m_AshitaCore->GetFontManager()->CreateFontObject("DeepsBase");
 	font->SetFont("Consolas", 10);
-	font->GetBackground()->SetColor(0xFF000000);
+    font->SetAutoResize(false);
+    font->GetBackground()->SetColor(D3DCOLOR_ARGB(0xCC, 0x00, 0x00, 0x00));
 	font->GetBackground()->SetVisibility(true);
-	font->SetColor(0xFFFFFFFF);
+    font->GetBackground()->SetWidth(158);
+    font->GetBackground()->SetHeight(256);
+    font->SetColor(D3DCOLOR_ARGB(0xFF, 0xFF, 0xFF, 0xFF));
 	font->SetBold(false);
 	font->SetText("");
 	font->SetPosition(300, 300);
@@ -411,6 +415,14 @@ bool Deeps::Direct3DInitialize(IDirect3DDevice8* lpDevice)
  */
 void Deeps::Direct3DRelease(void)
 {
+    m_AshitaCore->GetFontManager()->DeleteFontObject("DeepsBase");
+
+    for (int i = 0; i < m_bars; i++)
+    {
+        char name[32];
+        sprintf_s(name, 32, "DeepsBar%d", i);
+        m_AshitaCore->GetFontManager()->DeleteFontObject(name);
+    }
 }
 
 /**
@@ -429,25 +441,38 @@ void Deeps::Direct3DPreRender(void)
  */
 void Deeps::Direct3DRender(void)
 {
-	IFontObject* font = m_AshitaCore->GetFontManager()->GetFontObject("Deeps");
-	std::string text;
-	char string[256];
+	IFontObject* deepsBase = m_AshitaCore->GetFontManager()->GetFontObject("DeepsBase");
+
 	if (m_charInfo == 0)
 	{
+        deepsBase->SetText(" Deeps - Damage Done");
+        deepsBase->GetBackground()->SetWidth(158);
 		std::vector<entitysources_t> temp;
 		uint64_t total = 0;
 		for (auto e : entities)
 		{
-			temp.push_back(e.second);
-			total += e.second.total();
+            if (e.second.total() != 0 && temp.size() < 15)
+            {
+                temp.push_back(e.second);
+                total += e.second.total();
+            }
 		}
 		std::sort(temp.begin(), temp.end(), [](entitysources_t a, entitysources_t b){return a > b; });
+        repairBars(deepsBase, temp.size());
+
+        int i = 0;
+        uint64_t max = 0;
 		for (auto e : temp)
 		{
-			if (e.total() == 0)
-				continue;
-			sprintf_s(string, 256, "%-15s %7llu %03.1f%%\n", e.name.c_str(), e.total(), total == 0 ? 0 : 100 * ((float)e.total() / (float)total));
-			text.append(string);
+            char name[32];
+            sprintf_s(name, 32, "DeepsBar%d", i);
+            IFontObject* bar = m_AshitaCore->GetFontManager()->GetFontObject(name);
+            if (e.total() > max) max = e.total();
+            bar->GetBackground()->SetWidth(150 * (total == 0 ? 1 : ((float)e.total() / (float)max)));
+            char string[256];
+			sprintf_s(string, 256, " %-9.9s %6llu %03.1f%%\n", e.name.c_str(), e.total(), total == 0 ? 0 : 100 * ((float)e.total() / (float)total));
+            bar->SetText(string);
+            i++;
 		}
 	}
 	else
@@ -461,18 +486,32 @@ void Deeps::Direct3DRender(void)
 				uint64_t total = 0;
 				for (auto s : it->second.sources)
 				{
-					temp.push_back(s.second);
-					total += s.second.total();
+                    if (s.second.total() != 0 && temp.size() < 15)
+                    {
+                        temp.push_back(s.second);
+                        total += s.second.total();
+                    }
 				}
 				std::sort(temp.begin(), temp.end(), [](source_t a, source_t b){return a > b; });
-				sprintf_s(string, 256, "%s - Damage Done\n", it->second.name.c_str());
-				text.append(string);
+                char string[256];
+				sprintf_s(string, 256, " %s - Sources\n", it->second.name.c_str());
+                deepsBase->SetText(string);
+                deepsBase->GetBackground()->SetWidth(158);
+
+                repairBars(deepsBase, temp.size());
+                int i = 0;
+                uint64_t max = 0;
 				for (auto s : temp)
 				{
-					if (s.total() == 0)
-						continue;
-					sprintf_s(string, 256, "%-15s %7llu %03.1f%%\n", s.name.c_str(), s.total(), total == 0 ? 0 : 100 * ((float)s.total() / (float)total));
-					text.append(string);
+                    char name[32];
+                    sprintf_s(name, 32, "DeepsBar%d", i);
+                    IFontObject* bar = m_AshitaCore->GetFontManager()->GetFontObject(name);
+                    if (s.total() > max) max = s.total();
+                    bar->GetBackground()->SetWidth(150 * (total == 0 ? 1 : ((float)s.total() / (float)max)));
+                    char string[256];
+					sprintf_s(string, 256, " %-9.9s %7llu %03.1f%%\n", s.name.c_str(), s.total(), total == 0 ? 0 : 100 * ((float)s.total() / (float)total));
+                    bar->SetText(string);
+                    i++;
 				}
 			}
 			else
@@ -485,18 +524,31 @@ void Deeps::Direct3DRender(void)
 						uint32_t count = 0;
 						for (auto d : s.second.damage)
 						{
-							temp.push_back(d);
-							count += d.second.count;
+                            if (d.second.count != 0 && temp.size() < 15)
+                            {
+                                temp.push_back(d);
+                                count += d.second.count;
+                            }
 						}
 						std::sort(temp.begin(), temp.end(), [](std::pair<const char*, damage_t> a, std::pair<const char*, damage_t> b){return a.second > b.second; });
-						sprintf_s(string, 256, "%s - Damage Done by %s\n", it->second.name.c_str(), s.second.name.c_str());
-						text.append(string);
+                        char string[256];
+                        sprintf_s(string, 256, " %s - %s\n", it->second.name.c_str(), s.second.name.c_str());
+                        deepsBase->SetText(string);
+                        deepsBase->GetBackground()->SetWidth(262);
+                        repairBars(deepsBase, temp.size());
+                        int i = 0;
+                        uint32_t max = 0;
 						for (auto s : temp)
 						{
-							if (s.second.count == 0)
-								continue;
-							sprintf_s(string, 256, "%-6s Count: %4d Avg: %5d Max: %5d %3.1f%%\n", s.first, s.second.count, s.second.avg(), s.second.max, count == 0 ? 0 : 100 * ((float)s.second.count / (float)count));
-							text.append(string);
+                            char name[32];
+                            sprintf_s(name, 32, "DeepsBar%d", i);
+                            IFontObject* bar = m_AshitaCore->GetFontManager()->GetFontObject(name);
+                            if (s.second.count > max) max = s.second.count;
+                            bar->GetBackground()->SetWidth(254 * (count == 0 ? 1 : 1 * ((float)s.second.count / (float)max)));
+                            char string[256];
+                            sprintf_s(string, 256, " %-5s Cnt:%4d Avg:%5d Max:%5d %3.1f%%\n", s.first, s.second.count, s.second.avg(), s.second.max, count == 0 ? 0 : 100 * ((float)s.second.count / (float)count));
+                            bar->SetText(string);
+                            i++;
 						}
 						break;
 					}
@@ -504,9 +556,57 @@ void Deeps::Direct3DRender(void)
 			}
 		}
 	}
-	if (text.length() > 0)
-		text.pop_back();
-	font->SetText(text.c_str());
+}
+
+void Deeps::repairBars(IFontObject* deepsBase, uint8_t size)
+{
+    IFontObject* previous = deepsBase;
+    if (m_AshitaCore->GetFontManager()->GetFontObject("DeepsBar0") != NULL)
+    {
+        char name[32] = "DeepsBar0";
+        int i = 1;
+        while (m_AshitaCore->GetFontManager()->GetFontObject(name) != NULL)
+        {
+            previous = m_AshitaCore->GetFontManager()->GetFontObject(name);
+            sprintf_s(name, 32, "DeepsBar%d", i);
+            i++;
+        }
+    }
+    while (m_bars != size)
+    {
+        if (m_bars > size)
+        {
+            char name[32];
+            sprintf_s(name, 32, "DeepsBar%d", m_bars-1);
+            m_AshitaCore->GetFontManager()->DeleteFontObject(name);
+            m_bars--;
+        }
+        else if (m_bars < size)
+        {
+            char name[32];
+            sprintf_s(name, 32, "DeepsBar%d", m_bars);
+            IFontObject* bar = m_AshitaCore->GetFontManager()->CreateFontObject(name);
+            bar->SetParent(previous);
+            if (previous == deepsBase)
+            {
+                bar->SetPosition(4, 15);
+            }
+            else
+            {
+                bar->SetAnchorParent(Ashita::Enums::BottomLeft);
+                bar->SetPosition(0, 3);
+            }
+            bar->SetAutoResize(false);
+            bar->SetFont("Consolas", 8);
+            bar->GetBackground()->SetColor(D3DCOLOR_ARGB(0xFF, 0x00, 0x7C, 0x5C));
+            bar->GetBackground()->SetVisibility(true);
+            bar->GetBackground()->SetWidth(254);
+            bar->GetBackground()->SetHeight(13);
+            bar->SetVisibility(true);
+            m_bars++;
+            previous = bar;
+        }
+    }
 }
 
 /**

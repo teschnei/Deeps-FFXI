@@ -50,6 +50,7 @@ enum SPECEFFECT
 #include "..\..\ADK\Ashita.h"
 #include <map>
 #include <functional>
+#include <stdint.h>
 
 struct damage_t
 {
@@ -154,9 +155,11 @@ class Deeps : PluginBase
 private:
 	source_t* getDamageSource(entitysources_t* entityInfo, uint8_t actionType, uint16_t actionID);
 	void updateDamageSource(source_t* source, uint8_t reaction, uint8_t speceffect, uint32_t damage);
+    void repairBars(IFontObject* deepsBase, uint8_t size);
 	uint16_t getIndex(std::function<bool(IEntity*, int)>);
 	uint32_t m_charInfo;
 	std::string m_sourceInfo;
+    uint8_t m_bars;
 
 public:
     /**
@@ -184,6 +187,10 @@ public:
     void Direct3DPreRender(void);
     void Direct3DRender(void);
 };
+
+// Global pointer to this
+
+Deeps* g_Deeps = NULL;
 
 /**
  * @brief Required Plugin Exports
