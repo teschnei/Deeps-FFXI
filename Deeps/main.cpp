@@ -19,6 +19,7 @@
 #include "DSP-Utils.h"
 
 #include <algorithm>
+#include <thread>
 
 source_t* Deeps::getDamageSource(entitysources_t* entityInfo, uint8_t actionType, uint16_t actionID)
 {
@@ -135,6 +136,7 @@ bool Deeps::Initialize(IAshitaCore* ashitaCore, DWORD dwPluginId)
 
 	m_charInfo = 0;
     m_bars = 0;
+    m_return = false;
 
     return true;
 }
@@ -166,15 +168,84 @@ bool Deeps::HandleCommand(const char* pszCommand, int nCommandType)
 	if (count <= 0) return false;
 	HANDLECOMMAND("/deeps", "/dps")
 	{
-		if (args[1] == "reset")
-		{
-			entities.clear();
-            m_sourceInfo.clear();
-            m_charInfo = 0;
-		}
-		return true;
+        if (count >= 2)
+        {
+            if (args[1] == "reset")
+            {
+                entities.clear();
+                m_sourceInfo.clear();
+                m_charInfo = 0;
+                return true;
+            }
+            else if (args[1] == "report")
+            {
+                char mode = 0x00;
+                int max = 3;
+                if (count > 2)
+                {
+                    if (std::all_of(args[2].begin(), args[2].end(), ::isdigit))
+                    {
+                        max = atoi(args[2].c_str());
+                    }
+                    else
+                    {
+                        mode = args[2][0];
+                        if (count > 3)
+                        {
+                            if (std::all_of(args[2].begin(), args[2].end(), ::isdigit))
+                            {
+                                max = atoi(args[2].c_str());
+                            }
+                        }
+                    }
+                }
+
+                std::thread(&Deeps::report, this, mode, max).detach();
+
+                return true;
+            }
+        }
+        m_AshitaCore->GetChatManager()->AddChatMessage(5, "Deeps usage: /dps reset, /dps report [s/p/l] [#]");
+        return true;
 	}
     return false;
+}
+
+void Deeps::report(char mode, int max)
+{
+    IFontObject* deepsBase = m_AshitaCore->GetFontManager()->GetFontObject("DeepsBase");
+    if (deepsBase)
+    {
+        std::string line;
+        char buff[256];
+        if (mode != 0x00)
+        {
+            sprintf_s(buff, 256, "/%c ", mode);
+            line.append(buff);
+        }
+        line.append(deepsBase->GetText().ascii().c_str() + 1);
+        m_AshitaCore->GetChatManager()->QueueCommand(line.c_str(), Ashita::Enums::Typed);
+        for (int i = 0; i < m_bars; i++)
+        {
+            if (i > max)
+                break;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1100));
+            line.clear();
+            memset(buff, sizeof buff, 0);
+            if (mode != 0x00)
+            {
+                sprintf_s(buff, 256, "/%c ", mode);
+                line.append(buff);
+            }
+            sprintf_s(buff, 256, "%d -", i + 1);
+            line.append(buff);
+            char name[32];
+            sprintf_s(name, 32, "DeepsBar%d", i);
+            IFontObject* bar = m_AshitaCore->GetFontManager()->GetFontObject(name);
+            line.append(bar->GetText().ascii());
+            m_AshitaCore->GetChatManager()->QueueCommand(line.c_str(), Ashita::Enums::Typed);
+        }
+    }
 }
 
 /**
@@ -233,6 +304,7 @@ bool Deeps::HandleIncomingPacket(unsigned int uiPacketId, unsigned int uiPacketS
 			{
 				entitysources_t newInfo;
 				newInfo.name = m_AshitaCore->GetDataManager()->GetEntity()->GetName(index);
+                newInfo.color = Colors[rand() % Colors.size()];
 				entityInfo = &entities.insert(std::make_pair(userID, newInfo)).first->second;
 			}
 		}
@@ -349,6 +421,7 @@ bool Deeps::Direct3DInitialize(IDirect3DDevice8* lpDevice)
 	font->SetText("");
 	font->SetPosition(300, 300);
 	font->SetVisibility(true);
+    font->SetClickFunction(g_onClick);
 
     return true;
 }
@@ -386,6 +459,19 @@ void Deeps::Direct3DRender(void)
 {
 	IFontObject* deepsBase = m_AshitaCore->GetFontManager()->GetFontObject("DeepsBase");
 
+    if (m_return)
+    {
+        if (m_sourceInfo != "")
+        {
+            m_sourceInfo = "";
+        }
+        else
+        {
+            m_charInfo = 0;
+        }
+        m_return = false;
+    }
+
 	if (m_charInfo == 0)
 	{
         deepsBase->SetText(" Deeps - Damage Done");
@@ -413,6 +499,7 @@ void Deeps::Direct3DRender(void)
             IFontObject* bar = m_AshitaCore->GetFontManager()->GetFontObject(name);
             if (e.total() > max) max = e.total();
             bar->GetBackground()->SetWidth(150 * (total == 0 ? 1 : ((float)e.total() / (float)max)));
+            bar->GetBackground()->SetColor(e.color);
             char string[256];
 			sprintf_s(string, 256, " %-9.9s %6llu %03.1f%%\n", e.name.c_str(), e.total(), total == 0 ? 0 : 100 * ((float)e.total() / (float)total));
             bar->SetText(string);
@@ -454,6 +541,7 @@ void Deeps::Direct3DRender(void)
                     IFontObject* bar = m_AshitaCore->GetFontManager()->GetFontObject(name);
                     if (s.total() > max) max = s.total();
                     bar->GetBackground()->SetWidth(150 * (total == 0 ? 1 : ((float)s.total() / (float)max)));
+                    bar->GetBackground()->SetColor(it->second.color);
                     char string[256];
 					sprintf_s(string, 256, " %-9.9s %7llu %03.1f%%\n", s.name.c_str(), s.total(), total == 0 ? 0 : 100 * ((float)s.total() / (float)total));
                     bar->SetText(string);
@@ -492,6 +580,7 @@ void Deeps::Direct3DRender(void)
                             IFontObject* bar = m_AshitaCore->GetFontManager()->GetFontObject(name);
                             if (s.second.count > max) max = s.second.count;
                             bar->GetBackground()->SetWidth(254 * (count == 0 ? 1 : 1 * ((float)s.second.count / (float)max)));
+                            bar->GetBackground()->SetColor(it->second.color);
                             char string[256];
                             sprintf_s(string, 256, " %-5s Cnt:%4d Avg:%5d Max:%5d %3.1f%%\n", s.first, s.second.count, s.second.avg(), s.second.max, count == 0 ? 0 : 100 * ((float)s.second.count / (float)count));
                             bar->SetText(string);
@@ -559,20 +648,33 @@ void Deeps::repairBars(IFontObject* deepsBase, uint8_t size)
 
 void Deeps::onClick(int type, IFontObject* font, float xPos, float yPos)
 {
+    if (type == 1)
+    {
+        m_return = true;
+        return;
+    }
+
     if (m_charInfo == 0)
     {
         //Char was clicked
         if (type == 0)
         {
             // left click
-            auto name = clickMap.at(font);
-            for (auto entity : entities)
+            try
             {
-                if (entity.second.name == name)
+                auto name = clickMap.at(font);
+                for (auto entity : entities)
                 {
-                    m_charInfo = entity.first;
-                    break;
+                    if (entity.second.name == name)
+                    {
+                        m_charInfo = entity.first;
+                        break;
+                    }
                 }
+            }
+            catch (...)
+            {
+                return;
             }
         }
     }
@@ -581,23 +683,17 @@ void Deeps::onClick(int type, IFontObject* font, float xPos, float yPos)
         if (m_sourceInfo == "")
         {
             //source was clicked
-            if (type == 1)
+            if (type == 0)
             {
-                //right click
-                m_charInfo = 0;
-            }
-            else if (type == 0)
-            {
-                auto name = clickMap.at(font);
-                m_sourceInfo.assign(name);
-            }
-        }
-        else
-        {
-            //damage record was clicked
-            if (type == 1)
-            {
-                m_sourceInfo.clear();
+                try
+                {
+                    auto name = clickMap.at(font);
+                    m_sourceInfo.assign(name);
+                }
+                catch (...)
+                {
+                    return;
+                }
             }
         }
     }

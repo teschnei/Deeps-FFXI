@@ -105,6 +105,7 @@ struct source_t
 struct entitysources_t
 {
 	std::string name;
+    uint32_t color;
 	std::map<uint32_t, source_t> sources;
 
 	uint64_t total() const
@@ -136,6 +137,13 @@ static const std::vector<uint16_t> missMessages = { 15, 85, 158, 188, 245, 284, 
 static const std::vector<uint16_t> evadeMessages = { 14, 30, 31, 32, 33, 189, 248, 282, 283, 323, 355 };
 static const std::vector<uint16_t> parryMessages = { 69, 70 };
 
+static const std::vector<D3DCOLOR> Colors = { D3DCOLOR_ARGB(255, 12, 0, 155), D3DCOLOR_ARGB(255, 140, 0, 0), D3DCOLOR_ARGB(255, 255, 177, 32), D3DCOLOR_ARGB(255, 143, 143, 143),
+                                              D3DCOLOR_ARGB(255, 68, 68, 68), D3DCOLOR_ARGB(255, 255, 0, 0), D3DCOLOR_ARGB(255, 0, 164, 49), D3DCOLOR_ARGB(255, 198, 198, 0), 
+                                              D3DCOLOR_ARGB(255, 116, 0, 145), D3DCOLOR_ARGB(255, 165, 153, 10), D3DCOLOR_ARGB(255, 184, 128, 10), D3DCOLOR_ARGB(255, 47, 234, 0), 
+                                              D3DCOLOR_ARGB(255, 234, 100, 0), D3DCOLOR_ARGB(255, 119, 0, 0), D3DCOLOR_ARGB(255, 130, 17, 255), D3DCOLOR_ARGB(255, 79, 196, 0),
+                                              D3DCOLOR_ARGB(255, 0, 16, 217), D3DCOLOR_ARGB(255, 136, 68, 0), D3DCOLOR_ARGB(255, 244, 98, 0), D3DCOLOR_ARGB(255, 15, 219, 255),
+                                              D3DCOLOR_ARGB(255, 0, 123, 145), D3DCOLOR_ARGB(255, 224, 0, 230) };
+
 void g_onClick(int, void*, float, float);
 
 /**
@@ -162,10 +170,12 @@ private:
 	source_t* getDamageSource(entitysources_t* entityInfo, uint8_t actionType, uint16_t actionID);
 	bool updateDamageSource(source_t* source, uint16_t message, uint32_t damage);
     void repairBars(IFontObject* deepsBase, uint8_t size);
+    void report(char mode, int max);
 	uint16_t getIndex(std::function<bool(IEntity*, int)>);
 	uint32_t m_charInfo;
 	std::string m_sourceInfo;
     uint8_t m_bars;
+    bool m_return;
 
 public:
     /**
