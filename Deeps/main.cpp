@@ -137,7 +137,6 @@ bool Deeps::Initialize(IAshitaCore* ashitaCore, DWORD dwPluginId)
 
 	m_charInfo = 0;
     m_bars = 0;
-    m_return = false;
 
     return true;
 }
@@ -444,6 +443,9 @@ void Deeps::Direct3DRelease(void)
         char name[32];
         sprintf_s(name, 32, "DeepsBar%d", i);
         m_AshitaCore->GetFontManager()->DeleteFontObject(name);
+        memset(name, 0, sizeof name);
+        sprintf_s(name, 32, "DeepsBarClick%d", i);
+        m_AshitaCore->GetFontManager()->DeleteFontObject(name);
     }
 }
 
@@ -464,19 +466,6 @@ void Deeps::Direct3DPreRender(void)
 void Deeps::Direct3DRender(void)
 {
 	IFontObject* deepsBase = m_AshitaCore->GetFontManager()->GetFontObject("DeepsBase");
-
-    if (m_return)
-    {
-        if (m_sourceInfo != "")
-        {
-            m_sourceInfo = "";
-        }
-        else
-        {
-            m_charInfo = 0;
-        }
-        m_return = false;
-    }
 
 	if (m_charInfo == 0)
 	{
@@ -509,6 +498,10 @@ void Deeps::Direct3DRender(void)
             char string[256];
 			sprintf_s(string, 256, " %-9.9s %6llu %03.1f%%\n", e.name.c_str(), e.total(), total == 0 ? 0 : 100 * ((float)e.total() / (float)total));
             bar->SetText(string);
+            memset(name, 0, sizeof name);
+            sprintf_s(name, 32, "DeepsBarClick%d", i);
+            bar = m_AshitaCore->GetFontManager()->GetFontObject(name);
+            bar->GetBackground()->SetWidth(150);
             clickMap.insert(std::pair<IFontObject*, std::string>(bar, e.name));
             i++;
 		}
@@ -551,6 +544,10 @@ void Deeps::Direct3DRender(void)
                     char string[256];
 					sprintf_s(string, 256, " %-9.9s %7llu %03.1f%%\n", s.name.c_str(), s.total(), total == 0 ? 0 : 100 * ((float)s.total() / (float)total));
                     bar->SetText(string);
+                    memset(name, 0, sizeof name);
+                    sprintf_s(name, 32, "DeepsBarClick%d", i);
+                    bar = m_AshitaCore->GetFontManager()->GetFontObject(name);
+                    bar->GetBackground()->SetWidth(150);
                     clickMap.insert(std::pair<IFontObject*, std::string>(bar, s.name));
                     i++;
 				}
@@ -621,6 +618,9 @@ void Deeps::repairBars(IFontObject* deepsBase, uint8_t size)
             char name[32];
             sprintf_s(name, 32, "DeepsBar%d", m_bars-1);
             m_AshitaCore->GetFontManager()->DeleteFontObject(name);
+            memset(name, 0, sizeof name);
+            sprintf_s(name, 32, "DeepsBarClick%d", m_bars - 1);
+            m_AshitaCore->GetFontManager()->DeleteFontObject(name);
             m_bars--;
         }
         else if (m_bars < size)
@@ -645,7 +645,20 @@ void Deeps::repairBars(IFontObject* deepsBase, uint8_t size)
             bar->GetBackground()->SetWidth(254);
             bar->GetBackground()->SetHeight(13);
             bar->SetVisibility(true);
-            bar->SetClickFunction(g_onClick);
+
+            memset(name, 0, sizeof name);
+            sprintf_s(name, 32, "DeepsBarClick%d", m_bars);
+            IFontObject* clickBar = m_AshitaCore->GetFontManager()->CreateFontObject(name);
+            clickBar->SetParent(bar);
+            clickBar->SetPosition(0, 0);
+            clickBar->SetAutoResize(false);
+            clickBar->GetBackground()->SetColor(D3DCOLOR_ARGB(0x00, 0x00, 0x00, 0x00));
+            clickBar->GetBackground()->SetVisibility(true);
+            clickBar->GetBackground()->SetWidth(254);
+            clickBar->GetBackground()->SetHeight(13);
+            clickBar->SetVisibility(true);
+            clickBar->SetClickFunction(g_onClick);
+
             m_bars++;
             previous = bar;
         }
@@ -654,9 +667,16 @@ void Deeps::repairBars(IFontObject* deepsBase, uint8_t size)
 
 void Deeps::onClick(int type, IFontObject* font, float xPos, float yPos)
 {
-    if (type == 1)
+    if (type == 1 && font == m_AshitaCore->GetFontManager()->GetFontObject("DeepsBase"))
     {
-        m_return = true;
+        if (m_sourceInfo != "")
+        {
+            m_sourceInfo = "";
+        }
+        else
+        {
+            m_charInfo = 0;
+        }
         return;
     }
 

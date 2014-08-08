@@ -175,7 +175,6 @@ private:
 	uint32_t m_charInfo;
 	std::string m_sourceInfo;
     uint8_t m_bars;
-    bool m_return;
 
 public:
     /**
