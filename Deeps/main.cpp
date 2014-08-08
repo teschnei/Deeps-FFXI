@@ -333,7 +333,7 @@ bool Deeps::HandleIncomingPacket(unsigned int uiPacketId, unsigned int uiPacketS
                         if (!updateDamageSource(source, messageID, mainDamage))
                             return false;
 
-						if ((unpackBitsBE((unsigned char*)pData, startBit + 121, 2) & 0x1) && actionType != 6)
+						if ((unpackBitsBE((unsigned char*)pData, startBit + 121, 1) & 0x1) && actionType != 6)
 						{
 							addMessageID = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 149, 10));
 							if (addMessageID == 163 || addMessageID == 229 || (addMessageID >= 288 && addMessageID <= 302))
@@ -364,12 +364,17 @@ bool Deeps::HandleIncomingPacket(unsigned int uiPacketId, unsigned int uiPacketS
 								source->damage["Hit"].count += 1;
 								source->damage["Hit"].total += addEffectDamage;
 								source->damage["Hit"].min = (addEffectDamage < source->damage["Hit"].min ? addEffectDamage : source->damage["Hit"].min);
-								source->damage["Hit"].max = (addEffectDamage > source->damage["Hit"].min ? addEffectDamage : source->damage["Hit"].min);
+								source->damage["Hit"].max = (addEffectDamage > source->damage["Hit"].max ? addEffectDamage : source->damage["Hit"].max);
 							}
 
 							startBit += 37;
 						}
-						startBit += 87;
+                        startBit += 1;
+                        if (unpackBitsBE((unsigned char*)pData, startBit + 121, 1) & 0x1)
+                        {
+                            startBit += 34;
+                        }
+						startBit += 86;
 					}
 					startBit += 36;
 				}
