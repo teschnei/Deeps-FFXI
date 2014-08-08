@@ -1,4 +1,4 @@
-Deeps (beta) - by kjLotus
+Deeps - by kjLotus
 ==========
 
 Miniature damage logging in FFXI for Ashita v2
