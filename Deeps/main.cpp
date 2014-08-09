@@ -496,7 +496,7 @@ void Deeps::Direct3DRender(void)
             bar->GetBackground()->SetWidth(150 * (total == 0 ? 1 : ((float)e.total() / (float)max)));
             bar->GetBackground()->SetColor(e.color);
             char string[256];
-            sprintf_s(string, 256, " %-9.9s %6llu %03.1f%%\n", e.name.c_str(), e.total(), total == 0 ? 0 : 100 * ((float)e.total() / (float)total));
+            sprintf_s(string, 256, " %-10.10s %6llu %03.1f%%\n", e.name.c_str(), e.total(), total == 0 ? 0 : 100 * ((float)e.total() / (float)total));
             bar->SetText(string);
             memset(name, 0, sizeof name);
             sprintf_s(name, 32, "DeepsBarClick%d", i);
@@ -542,7 +542,7 @@ void Deeps::Direct3DRender(void)
                     bar->GetBackground()->SetWidth(150 * (total == 0 ? 1 : ((float)s.total() / (float)max)));
                     bar->GetBackground()->SetColor(it->second.color);
                     char string[256];
-                    sprintf_s(string, 256, " %-9.9s %7llu %03.1f%%\n", s.name.c_str(), s.total(), total == 0 ? 0 : 100 * ((float)s.total() / (float)total));
+                    sprintf_s(string, 256, " %-10.10s %6llu %03.1f%%\n", s.name.c_str(), s.total(), total == 0 ? 0 : 100 * ((float)s.total() / (float)total));
                     bar->SetText(string);
                     memset(name, 0, sizeof name);
                     sprintf_s(name, 32, "DeepsBarClick%d", i);
