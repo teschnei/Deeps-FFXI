@@ -595,6 +595,7 @@ void Deeps::Direct3DRender(void)
 			}
 		}
 	}
+    deepsBase->GetBackground()->SetHeight(m_bars * 16 + 17);
 }
 
 void Deeps::repairBars(IFontObject* deepsBase, uint8_t size)
@@ -642,6 +643,9 @@ void Deeps::repairBars(IFontObject* deepsBase, uint8_t size)
             bar->SetFont("Consolas", 8);
             bar->GetBackground()->SetColor(D3DCOLOR_ARGB(0xFF, 0x00, 0x7C, 0x5C));
             bar->GetBackground()->SetVisibility(true);
+            std::string path = m_AshitaCore->GetAshitaInstallPathA();
+            path.append("\\Resources\\Deeps\\bar.tga");
+            bar->GetBackground()->SetTextureFromFile(path.c_str());
             bar->GetBackground()->SetWidth(254);
             bar->GetBackground()->SetHeight(13);
             bar->SetVisibility(true);
