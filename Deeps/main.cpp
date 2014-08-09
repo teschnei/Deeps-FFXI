@@ -23,55 +23,55 @@
 
 source_t* Deeps::getDamageSource(entitysources_t* entityInfo, uint8_t actionType, uint16_t actionID)
 {
-	uint32_t key = (actionID << 8) + actionType;
-	auto sourcesIt = entityInfo->sources.find(key);
+    uint32_t key = (actionID << 8) + actionType;
+    auto sourcesIt = entityInfo->sources.find(key);
 
-	source_t* source;
+    source_t* source;
 
-	if (sourcesIt != entityInfo->sources.end())
-	{
-		source = &sourcesIt->second;
-	}
-	else
-	{
-		source_t newsource;
+    if (sourcesIt != entityInfo->sources.end())
+    {
+        source = &sourcesIt->second;
+    }
+    else
+    {
+        source_t newsource;
 
-		sourcesIt = entityInfo->sources.insert(std::make_pair(key, newsource)).first;
+        sourcesIt = entityInfo->sources.insert(std::make_pair(key, newsource)).first;
 
-		source = &sourcesIt->second;
-		if (actionType == 1) { source->name.append("Attack"); }
-		else if (actionType == 2) { source->name.append("Ranged Attack"); }
-		else if (actionType == 3 || actionType == 11){ source->name.append(m_AshitaCore->GetResourceManager()->GetAbilityByID(actionID)->Name[2]); }
-		else if (actionType == 4) { source->name.append(m_AshitaCore->GetResourceManager()->GetSpellByID(actionID)->Name[2]); }
-		else if (actionType == 6 || actionType == 14 || actionType == 15) { source->name.append(m_AshitaCore->GetResourceManager()->GetAbilityByID(actionID+512)->Name[2]); }
+        source = &sourcesIt->second;
+        if (actionType == 1) { source->name.append("Attack"); }
+        else if (actionType == 2) { source->name.append("Ranged Attack"); }
+        else if (actionType == 3 || actionType == 11){ source->name.append(m_AshitaCore->GetResourceManager()->GetAbilityByID(actionID)->Name[2]); }
+        else if (actionType == 4) { source->name.append(m_AshitaCore->GetResourceManager()->GetSpellByID(actionID)->Name[2]); }
+        else if (actionType == 6 || actionType == 14 || actionType == 15) { source->name.append(m_AshitaCore->GetResourceManager()->GetAbilityByID(actionID + 512)->Name[2]); }
 
-	}
-	return source;
+    }
+    return source;
 }
 
 bool Deeps::updateDamageSource(source_t* source, uint16_t message, uint32_t damage)
 {
-	damage_t* type = NULL;
+    damage_t* type = NULL;
     if (std::find(hitMessages.begin(), hitMessages.end(), message) != hitMessages.end())
     {
         type = &source->damage["Hit"];
     }
     else if (std::find(critMessages.begin(), critMessages.end(), message) != critMessages.end())
-	{
-		type = &source->damage["Crit"];
-	}
+    {
+        type = &source->damage["Crit"];
+    }
     else if (std::find(missMessages.begin(), missMessages.end(), message) != missMessages.end())
-	{
-		type = &source->damage["Miss"];
-	}
+    {
+        type = &source->damage["Miss"];
+    }
     else if (std::find(evadeMessages.begin(), evadeMessages.end(), message) != evadeMessages.end())
     {
         type = &source->damage["Evade"];
     }
     else if (std::find(parryMessages.begin(), parryMessages.end(), message) != parryMessages.end())
-	{
-		type = &source->damage["Parry"];
-	}
+    {
+        type = &source->damage["Parry"];
+    }
     if (type)
     {
         type->total += damage;
@@ -85,14 +85,14 @@ bool Deeps::updateDamageSource(source_t* source, uint16_t message, uint32_t dama
 
 uint16_t Deeps::getIndex(std::function<bool(IEntity*, int)> func)
 {
-	for (int i = 0; i < 2048; i++)
-	{
-		if (func(m_AshitaCore->GetDataManager()->GetEntity(), i))
-		{
-			return i;
-		}
-	}
-	return 0;
+    for (int i = 0; i < 2048; i++)
+    {
+        if (func(m_AshitaCore->GetDataManager()->GetEntity(), i))
+        {
+            return i;
+        }
+    }
+    return 0;
 }
 
 /**
@@ -135,7 +135,7 @@ bool Deeps::Initialize(IAshitaCore* ashitaCore, DWORD dwPluginId)
     g_Deeps = this;
     srand(time(NULL));
 
-	m_charInfo = 0;
+    m_charInfo = 0;
     m_bars = 0;
 
     return true;
@@ -163,11 +163,11 @@ void Deeps::Release(void)
  */
 bool Deeps::HandleCommand(const char* pszCommand, int nCommandType)
 {
-	std::vector<std::string> args;
-	auto count = Ashita::Commands::GetCommandArgs(pszCommand, &args);
-	if (count <= 0) return false;
-	HANDLECOMMAND("/deeps", "/dps")
-	{
+    std::vector<std::string> args;
+    auto count = Ashita::Commands::GetCommandArgs(pszCommand, &args);
+    if (count <= 0) return false;
+    HANDLECOMMAND("/deeps", "/dps")
+    {
         if (count >= 2)
         {
             if (args[1] == "reset")
@@ -207,7 +207,7 @@ bool Deeps::HandleCommand(const char* pszCommand, int nCommandType)
         }
         m_AshitaCore->GetChatManager()->AddChatMessage(5, "Deeps usage: /dps reset, /dps report [s/p/l] [#]");
         return true;
-	}
+    }
     return false;
 }
 
@@ -275,111 +275,111 @@ bool Deeps::HandleNewChatLine(short sMode, char* pszChatLine)
  */
 bool Deeps::HandleIncomingPacket(unsigned int uiPacketId, unsigned int uiPacketSize, void* pData)
 {
-	if (uiPacketId == 0x28) //action
-	{
-		uint8_t actionNum = (uint8_t)(unpackBitsBE((unsigned char*)pData, 182, 4));
-		uint8_t targetNum = RBUFB(pData, 0x09);
-		uint8_t actionType = (uint8_t)(unpackBitsBE((unsigned char*)pData, 82, 4));
-		//uint8_t reaction = 0;
-		//uint8_t speceffect = 0;
-		uint16_t actionID = (uint16_t)(unpackBitsBE((unsigned char*)pData, 86, 10));
-		uint32_t userID = RBUFL(pData, 0x05);
-		uint16_t startBit = 150;
-		uint16_t damage = 0;
+    if (uiPacketId == 0x28) //action
+    {
+        uint8_t actionNum = (uint8_t)(unpackBitsBE((unsigned char*)pData, 182, 4));
+        uint8_t targetNum = RBUFB(pData, 0x09);
+        uint8_t actionType = (uint8_t)(unpackBitsBE((unsigned char*)pData, 82, 4));
+        //uint8_t reaction = 0;
+        //uint8_t speceffect = 0;
+        uint16_t actionID = (uint16_t)(unpackBitsBE((unsigned char*)pData, 86, 10));
+        uint32_t userID = RBUFL(pData, 0x05);
+        uint16_t startBit = 150;
+        uint16_t damage = 0;
 
-		if (userID > 0x1000000)
-			return false;
+        if (userID > 0x1000000)
+            return false;
 
-		auto it = entities.find(userID);
-		entitysources_t* entityInfo = NULL;
+        auto it = entities.find(userID);
+        entitysources_t* entityInfo = NULL;
 
-		if (it != entities.end())
-		{
-			entityInfo = &it->second;
-		}
-		else
-		{
-			uint16_t index = getIndex([&](IEntity* entities, int i){if (entities->GetServerID(i) == userID) return true; return false; });
-			if (index != 0)
-			{
-				entitysources_t newInfo;
-				newInfo.name = m_AshitaCore->GetDataManager()->GetEntity()->GetName(index);
+        if (it != entities.end())
+        {
+            entityInfo = &it->second;
+        }
+        else
+        {
+            uint16_t index = getIndex([&](IEntity* entities, int i){if (entities->GetServerID(i) == userID) return true; return false; });
+            if (index != 0)
+            {
+                entitysources_t newInfo;
+                newInfo.name = m_AshitaCore->GetDataManager()->GetEntity()->GetName(index);
                 newInfo.color = Colors[rand() % Colors.size()];
-				entityInfo = &entities.insert(std::make_pair(userID, newInfo)).first->second;
-			}
-		}
+                entityInfo = &entities.insert(std::make_pair(userID, newInfo)).first->second;
+            }
+        }
 
-		if (entityInfo)
-		{
-			if ((actionType >= 1 && actionType <= 4) || (actionType == 6) || (actionType == 11) || (actionType == 14) || (actionType == 15))
-			{
-				if (actionID == 0)
-					return false;
-				source_t* source = getDamageSource(entityInfo, actionType, actionID);
-				uint16_t messageID = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 80, 10));
+        if (entityInfo)
+        {
+            if ((actionType >= 1 && actionType <= 4) || (actionType == 6) || (actionType == 11) || (actionType == 14) || (actionType == 15))
+            {
+                if (actionID == 0)
+                    return false;
+                source_t* source = getDamageSource(entityInfo, actionType, actionID);
+                uint16_t messageID = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 80, 10));
 
-				uint32_t addEffectDamage = 0;
-				uint8_t addEffectCount = 0;
-				uint16_t addMessageID = 0;
-				for (int i = 0; i < targetNum; i++)
-				{
-					for (int j = 0; j < actionNum; j++)
-					{
-						uint32_t mainDamage = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 63, 17));
-						uint8_t reaction = (uint8_t)(unpackBitsBE((unsigned char*)pData, startBit + 36, 5));
-						uint8_t speceffect = (uint8_t)(unpackBitsBE((unsigned char*)pData, startBit + 53, 9));
+                uint32_t addEffectDamage = 0;
+                uint8_t addEffectCount = 0;
+                uint16_t addMessageID = 0;
+                for (int i = 0; i < targetNum; i++)
+                {
+                    for (int j = 0; j < actionNum; j++)
+                    {
+                        uint32_t mainDamage = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 63, 17));
+                        uint8_t reaction = (uint8_t)(unpackBitsBE((unsigned char*)pData, startBit + 36, 5));
+                        uint8_t speceffect = (uint8_t)(unpackBitsBE((unsigned char*)pData, startBit + 53, 9));
 
                         if (!updateDamageSource(source, messageID, mainDamage))
                             return false;
 
-						if ((unpackBitsBE((unsigned char*)pData, startBit + 121, 1) & 0x1) && actionType != 6)
-						{
-							addMessageID = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 149, 10));
-							if (addMessageID == 163 || addMessageID == 229 || (addMessageID >= 288 && addMessageID <= 302))
-							{
-								addEffectDamage = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 132, 16));
-								uint32_t key = 0;
-								if (addMessageID == 163 || addMessageID == 229)
-									key = 1 << 8;
-								else
-									key = 2 << 8;
-								auto sourcesIt = entityInfo->sources.find(key);
+                        if ((unpackBitsBE((unsigned char*)pData, startBit + 121, 1) & 0x1) && actionType != 6)
+                        {
+                            addMessageID = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 149, 10));
+                            if (addMessageID == 163 || addMessageID == 229 || (addMessageID >= 288 && addMessageID <= 302))
+                            {
+                                addEffectDamage = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 132, 16));
+                                uint32_t key = 0;
+                                if (addMessageID == 163 || addMessageID == 229)
+                                    key = 1 << 8;
+                                else
+                                    key = 2 << 8;
+                                auto sourcesIt = entityInfo->sources.find(key);
 
-								source_t* source;
+                                source_t* source;
 
-								if (sourcesIt != entityInfo->sources.end())
-								{
-									source = &sourcesIt->second;
-								}
-								else
-								{
-									source_t newsource;
-									if (key == 1 << 8) { newsource.name.append("Additional Effect"); }
-									else { newsource.name.append("Skillchain"); }
+                                if (sourcesIt != entityInfo->sources.end())
+                                {
+                                    source = &sourcesIt->second;
+                                }
+                                else
+                                {
+                                    source_t newsource;
+                                    if (key == 1 << 8) { newsource.name.append("Additional Effect"); }
+                                    else { newsource.name.append("Skillchain"); }
 
-									sourcesIt = entityInfo->sources.insert(std::make_pair(key, newsource)).first;
-									source = &sourcesIt->second;
-								}
-								source->damage["Hit"].count += 1;
-								source->damage["Hit"].total += addEffectDamage;
-								source->damage["Hit"].min = (addEffectDamage < source->damage["Hit"].min ? addEffectDamage : source->damage["Hit"].min);
-								source->damage["Hit"].max = (addEffectDamage > source->damage["Hit"].max ? addEffectDamage : source->damage["Hit"].max);
-							}
+                                    sourcesIt = entityInfo->sources.insert(std::make_pair(key, newsource)).first;
+                                    source = &sourcesIt->second;
+                                }
+                                source->damage["Hit"].count += 1;
+                                source->damage["Hit"].total += addEffectDamage;
+                                source->damage["Hit"].min = (addEffectDamage < source->damage["Hit"].min ? addEffectDamage : source->damage["Hit"].min);
+                                source->damage["Hit"].max = (addEffectDamage > source->damage["Hit"].max ? addEffectDamage : source->damage["Hit"].max);
+                            }
 
-							startBit += 37;
-						}
+                            startBit += 37;
+                        }
                         startBit += 1;
                         if (unpackBitsBE((unsigned char*)pData, startBit + 121, 1) & 0x1)
                         {
                             startBit += 34;
                         }
-						startBit += 86;
-					}
-					startBit += 36;
-				}
-			}
-		}
-	}
+                        startBit += 86;
+                    }
+                    startBit += 36;
+                }
+            }
+        }
+    }
     return false;
 }
 
@@ -414,18 +414,18 @@ bool Deeps::Direct3DInitialize(IDirect3DDevice8* lpDevice)
 {
     this->m_Direct3DDevice = lpDevice;
 
-	IFontObject* font = m_AshitaCore->GetFontManager()->CreateFontObject("DeepsBase");
-	font->SetFont("Consolas", 10);
+    IFontObject* font = m_AshitaCore->GetFontManager()->CreateFontObject("DeepsBase");
+    font->SetFont("Consolas", 10);
     font->SetAutoResize(false);
     font->GetBackground()->SetColor(D3DCOLOR_ARGB(0xCC, 0x00, 0x00, 0x00));
-	font->GetBackground()->SetVisibility(true);
+    font->GetBackground()->SetVisibility(true);
     font->GetBackground()->SetWidth(158);
     font->GetBackground()->SetHeight(256);
     font->SetColor(D3DCOLOR_ARGB(0xFF, 0xFF, 0xFF, 0xFF));
-	font->SetBold(false);
-	font->SetText("");
-	font->SetPosition(300, 300);
-	font->SetVisibility(true);
+    font->SetBold(false);
+    font->SetText("");
+    font->SetPosition(300, 300);
+    font->SetVisibility(true);
     font->SetClickFunction(g_onClick);
 
     return true;
@@ -465,30 +465,30 @@ void Deeps::Direct3DPreRender(void)
  */
 void Deeps::Direct3DRender(void)
 {
-	IFontObject* deepsBase = m_AshitaCore->GetFontManager()->GetFontObject("DeepsBase");
+    IFontObject* deepsBase = m_AshitaCore->GetFontManager()->GetFontObject("DeepsBase");
 
-	if (m_charInfo == 0)
-	{
+    if (m_charInfo == 0)
+    {
         deepsBase->SetText(" Deeps - Damage Done");
         deepsBase->GetBackground()->SetWidth(158);
-		std::vector<entitysources_t> temp;
-		uint64_t total = 0;
-		for (auto e : entities)
-		{
+        std::vector<entitysources_t> temp;
+        uint64_t total = 0;
+        for (auto e : entities)
+        {
             if (e.second.total() != 0 && temp.size() < 15)
             {
                 temp.push_back(e.second);
                 total += e.second.total();
             }
-		}
-		std::sort(temp.begin(), temp.end(), [](entitysources_t a, entitysources_t b){return a > b; });
+        }
+        std::sort(temp.begin(), temp.end(), [](entitysources_t a, entitysources_t b){return a > b; });
         repairBars(deepsBase, temp.size());
 
         int i = 0;
         uint64_t max = 0;
         clickMap.clear();
-		for (auto e : temp)
-		{
+        for (auto e : temp)
+        {
             char name[32];
             sprintf_s(name, 32, "DeepsBar%d", i);
             IFontObject* bar = m_AshitaCore->GetFontManager()->GetFontObject(name);
@@ -496,7 +496,7 @@ void Deeps::Direct3DRender(void)
             bar->GetBackground()->SetWidth(150 * (total == 0 ? 1 : ((float)e.total() / (float)max)));
             bar->GetBackground()->SetColor(e.color);
             char string[256];
-			sprintf_s(string, 256, " %-9.9s %6llu %03.1f%%\n", e.name.c_str(), e.total(), total == 0 ? 0 : 100 * ((float)e.total() / (float)total));
+            sprintf_s(string, 256, " %-9.9s %6llu %03.1f%%\n", e.name.c_str(), e.total(), total == 0 ? 0 : 100 * ((float)e.total() / (float)total));
             bar->SetText(string);
             memset(name, 0, sizeof name);
             sprintf_s(name, 32, "DeepsBarClick%d", i);
@@ -504,28 +504,28 @@ void Deeps::Direct3DRender(void)
             bar->GetBackground()->SetWidth(150);
             clickMap.insert(std::pair<IFontObject*, std::string>(bar, e.name));
             i++;
-		}
-	}
-	else
-	{
-		auto it = entities.find(m_charInfo);
-		if (it != entities.end())
-		{
-			if (m_sourceInfo == "")
-			{
-				std::vector<source_t> temp;
-				uint64_t total = 0;
-				for (auto s : it->second.sources)
-				{
+        }
+    }
+    else
+    {
+        auto it = entities.find(m_charInfo);
+        if (it != entities.end())
+        {
+            if (m_sourceInfo == "")
+            {
+                std::vector<source_t> temp;
+                uint64_t total = 0;
+                for (auto s : it->second.sources)
+                {
                     if (s.second.total() != 0 && temp.size() < 15)
                     {
                         temp.push_back(s.second);
                         total += s.second.total();
                     }
-				}
-				std::sort(temp.begin(), temp.end(), [](source_t a, source_t b){return a > b; });
+                }
+                std::sort(temp.begin(), temp.end(), [](source_t a, source_t b){return a > b; });
                 char string[256];
-				sprintf_s(string, 256, " %s - Sources\n", it->second.name.c_str());
+                sprintf_s(string, 256, " %s - Sources\n", it->second.name.c_str());
                 deepsBase->SetText(string);
                 deepsBase->GetBackground()->SetWidth(158);
 
@@ -533,8 +533,8 @@ void Deeps::Direct3DRender(void)
                 int i = 0;
                 uint64_t max = 0;
                 clickMap.clear();
-				for (auto s : temp)
-				{
+                for (auto s : temp)
+                {
                     char name[32];
                     sprintf_s(name, 32, "DeepsBar%d", i);
                     IFontObject* bar = m_AshitaCore->GetFontManager()->GetFontObject(name);
@@ -542,7 +542,7 @@ void Deeps::Direct3DRender(void)
                     bar->GetBackground()->SetWidth(150 * (total == 0 ? 1 : ((float)s.total() / (float)max)));
                     bar->GetBackground()->SetColor(it->second.color);
                     char string[256];
-					sprintf_s(string, 256, " %-9.9s %7llu %03.1f%%\n", s.name.c_str(), s.total(), total == 0 ? 0 : 100 * ((float)s.total() / (float)total));
+                    sprintf_s(string, 256, " %-9.9s %7llu %03.1f%%\n", s.name.c_str(), s.total(), total == 0 ? 0 : 100 * ((float)s.total() / (float)total));
                     bar->SetText(string);
                     memset(name, 0, sizeof name);
                     sprintf_s(name, 32, "DeepsBarClick%d", i);
@@ -550,25 +550,25 @@ void Deeps::Direct3DRender(void)
                     bar->GetBackground()->SetWidth(150);
                     clickMap.insert(std::pair<IFontObject*, std::string>(bar, s.name));
                     i++;
-				}
-			}
-			else
-			{
-				for (auto s : it->second.sources)
-				{
-					if (s.second.name == m_sourceInfo)
-					{
-						std::vector<std::pair<const char*, damage_t> > temp;
-						uint32_t count = 0;
-						for (auto d : s.second.damage)
-						{
+                }
+            }
+            else
+            {
+                for (auto s : it->second.sources)
+                {
+                    if (s.second.name == m_sourceInfo)
+                    {
+                        std::vector<std::pair<const char*, damage_t> > temp;
+                        uint32_t count = 0;
+                        for (auto d : s.second.damage)
+                        {
                             if (d.second.count != 0 && temp.size() < 15)
                             {
                                 temp.push_back(d);
                                 count += d.second.count;
                             }
-						}
-						std::sort(temp.begin(), temp.end(), [](std::pair<const char*, damage_t> a, std::pair<const char*, damage_t> b){return a.second > b.second; });
+                        }
+                        std::sort(temp.begin(), temp.end(), [](std::pair<const char*, damage_t> a, std::pair<const char*, damage_t> b){return a.second > b.second; });
                         char string[256];
                         sprintf_s(string, 256, " %s - %s\n", it->second.name.c_str(), s.second.name.c_str());
                         deepsBase->SetText(string);
@@ -576,8 +576,8 @@ void Deeps::Direct3DRender(void)
                         repairBars(deepsBase, temp.size());
                         int i = 0;
                         uint32_t max = 0;
-						for (auto s : temp)
-						{
+                        for (auto s : temp)
+                        {
                             char name[32];
                             sprintf_s(name, 32, "DeepsBar%d", i);
                             IFontObject* bar = m_AshitaCore->GetFontManager()->GetFontObject(name);
@@ -588,13 +588,13 @@ void Deeps::Direct3DRender(void)
                             sprintf_s(string, 256, " %-5s Cnt:%4d Avg:%5d Max:%5d %3.1f%%\n", s.first, s.second.count, s.second.avg(), s.second.max, count == 0 ? 0 : 100 * ((float)s.second.count / (float)count));
                             bar->SetText(string);
                             i++;
-						}
-						break;
-					}
-				}
-			}
-		}
-	}
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
     deepsBase->GetBackground()->SetHeight(m_bars * 16 + 17);
 }
 
@@ -617,7 +617,7 @@ void Deeps::repairBars(IFontObject* deepsBase, uint8_t size)
         if (m_bars > size)
         {
             char name[32];
-            sprintf_s(name, 32, "DeepsBar%d", m_bars-1);
+            sprintf_s(name, 32, "DeepsBar%d", m_bars - 1);
             m_AshitaCore->GetFontManager()->DeleteFontObject(name);
             memset(name, 0, sizeof name);
             sprintf_s(name, 32, "DeepsBarClick%d", m_bars - 1);
@@ -764,7 +764,7 @@ __declspec(dllexport) void __stdcall CreatePluginData(PluginData* lpBuffer)
 __declspec(dllexport) IPlugin* __stdcall CreatePlugin(char* pszReserved)
 {
     UNREFERENCED_PARAMETER(pszReserved);
-	return (IPlugin*)new Deeps();
+    return (IPlugin*)new Deeps();
 }
 
 void g_onClick(int type, void* font, float xPos, float yPos)
