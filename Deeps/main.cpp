@@ -52,13 +52,16 @@ source_t* Deeps::getDamageSource(entitysources_t* entityInfo, uint8_t actionType
 bool Deeps::updateDamageSource(source_t* source, uint16_t message, uint32_t damage)
 {
     damage_t* type = NULL;
+    bool val = false;
     if (std::find(hitMessages.begin(), hitMessages.end(), message) != hitMessages.end())
     {
         type = &source->damage["Hit"];
+        val = true;
     }
     else if (std::find(critMessages.begin(), critMessages.end(), message) != critMessages.end())
     {
         type = &source->damage["Crit"];
+        val = true;
     }
     else if (std::find(missMessages.begin(), missMessages.end(), message) != missMessages.end())
     {
@@ -74,6 +77,7 @@ bool Deeps::updateDamageSource(source_t* source, uint16_t message, uint32_t dama
     }
     if (type)
     {
+        damage = val ? damage : 0;
         type->total += damage;
         type->count++;
         type->min = (damage < type->min ? damage : type->min);
