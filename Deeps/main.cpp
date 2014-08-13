@@ -756,7 +756,7 @@ __declspec(dllexport) void __stdcall CreatePluginData(PluginData* lpBuffer)
     strcpy_s(g_PluginData->Author, sizeof(g_PluginData->Author), "kjLotus");
 
     g_PluginData->InterfaceVersion = ASHITA_INTERFACE_VERSION;
-    g_PluginData->PluginVersion = 2.0f;
+    g_PluginData->PluginVersion = 2.03f;
     g_PluginData->Priority = 0;
 }
 
