@@ -217,7 +217,7 @@ bool Deeps::HandleCommand(const char* pszCommand, int nCommandType)
 
 void Deeps::report(char mode, int max)
 {
-    IFontObject* deepsBase = m_AshitaCore->GetFontManager()->GetFontObject("DeepsBG");
+    IFontObject* deepsBase = m_AshitaCore->GetFontManager()->GetFontObject("DeepsBackground");
     if (deepsBase)
     {
         std::string line;
@@ -418,7 +418,7 @@ bool Deeps::Direct3DInitialize(IDirect3DDevice8* lpDevice)
 {
     this->m_Direct3DDevice = lpDevice;
 
-    IFontObject* font = m_AshitaCore->GetFontManager()->CreateFontObject("DeepsBG");
+    IFontObject* font = m_AshitaCore->GetFontManager()->CreateFontObject("DeepsBackground");
     font->SetFont("Consolas", 10);
     font->SetAutoResize(false);
     font->GetBackground()->SetColor(D3DCOLOR_ARGB(0xCC, 0x00, 0x00, 0x00));
@@ -440,7 +440,7 @@ bool Deeps::Direct3DInitialize(IDirect3DDevice8* lpDevice)
  */
 void Deeps::Direct3DRelease(void)
 {
-    m_AshitaCore->GetFontManager()->DeleteFontObject("DeepsBG");
+    m_AshitaCore->GetFontManager()->DeleteFontObject("DeepsBackground");
 
     for (int i = 0; i < m_bars; i++)
     {
@@ -469,7 +469,7 @@ void Deeps::Direct3DPreRender(void)
  */
 void Deeps::Direct3DRender(void)
 {
-    IFontObject* deepsBase = m_AshitaCore->GetFontManager()->GetFontObject("DeepsBG");
+    IFontObject* deepsBase = m_AshitaCore->GetFontManager()->GetFontObject("DeepsBackground");
 
     if (m_charInfo == 0)
     {
