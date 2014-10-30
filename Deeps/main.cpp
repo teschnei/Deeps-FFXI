@@ -329,9 +329,14 @@ bool Deeps::HandleIncomingPacket(unsigned int uiPacketId, unsigned int uiPacketS
                 {
                     for (int j = 0; j < actionNum; j++)
                     {
-                        uint32_t mainDamage = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 63, 17));
                         uint8_t reaction = (uint8_t)(unpackBitsBE((unsigned char*)pData, startBit + 36, 5));
+                        uint16_t animation = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 41, 12));
+                        uint32_t mainDamage = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 63, 17));
                         uint8_t speceffect = (uint8_t)(unpackBitsBE((unsigned char*)pData, startBit + 53, 9));
+
+                        //Daken (ranged attack on attack)
+                        if (actionType == 1 && animation == 4)
+                            source = getDamageSource(entityInfo, actionType+1, actionID);
 
                         if (!updateDamageSource(source, messageID, mainDamage))
                             return false;
