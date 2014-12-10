@@ -208,6 +208,19 @@ bool Deeps::HandleCommand(const char* pszCommand, int nCommandType)
 
                 return true;
             }
+            else if (args[1] == "debug")
+            {
+                m_debug = !m_debug;
+                if (m_debug)
+                {
+                    m_AshitaCore->GetChatManager()->AddChatMessage(5, "Deeps: Debug on");
+                }
+                else
+                {
+                    m_AshitaCore->GetChatManager()->AddChatMessage(5, "Deeps: Debug off");
+                }
+                return true;
+            }
         }
         m_AshitaCore->GetChatManager()->AddChatMessage(5, "Deeps usage: /dps reset, /dps report [s/p/l] [#]");
         return true;
@@ -315,6 +328,11 @@ bool Deeps::HandleIncomingPacket(unsigned int uiPacketId, unsigned int uiPacketS
 
         if (entityInfo)
         {
+            if (m_debug)
+            {
+                m_AshitaCore->GetChatManager()->Write("Action Type: %d Action ID: %d", actionType, actionID);
+            }
+
             if ((actionType >= 1 && actionType <= 4) || (actionType == 6) || (actionType == 11) || (actionType == 14) || (actionType == 15))
             {
                 if (actionID == 0)
@@ -333,6 +351,12 @@ bool Deeps::HandleIncomingPacket(unsigned int uiPacketId, unsigned int uiPacketS
                         uint16_t animation = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 41, 12));
                         uint32_t mainDamage = (uint16_t)(unpackBitsBE((unsigned char*)pData, startBit + 63, 17));
                         uint8_t speceffect = (uint8_t)(unpackBitsBE((unsigned char*)pData, startBit + 53, 9));
+
+                        if (m_debug)
+                        {
+                            m_AshitaCore->GetChatManager()->Write("Reaction: %d Animation: %d", reaction, animation);
+                            m_AshitaCore->GetChatManager()->Write("Speceffect: %d Param: %d", speceffect, mainDamage);
+                        }
 
                         //Daken (ranged attack on attack)
                         if (actionType == 1 && animation == 4)
