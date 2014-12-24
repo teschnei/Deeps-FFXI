@@ -447,6 +447,9 @@ bool Deeps::Direct3DInitialize(IDirect3DDevice8* lpDevice)
 {
     this->m_Direct3DDevice = lpDevice;
 
+    float xpos = m_AshitaCore->GetConfigurationManager()->GetConfigFloat("Deeps", "xpos", 300.0f);
+    float ypos = m_AshitaCore->GetConfigurationManager()->GetConfigFloat("Deeps", "ypos", 300.0f);
+
     IFontObject* font = m_AshitaCore->GetFontManager()->CreateFontObject("DeepsBackground");
     font->SetFont("Consolas", 10);
     font->SetAutoResize(false);
@@ -457,7 +460,7 @@ bool Deeps::Direct3DInitialize(IDirect3DDevice8* lpDevice)
     font->SetColor(D3DCOLOR_ARGB(0xFF, 0xFF, 0xFF, 0xFF));
     font->SetBold(false);
     font->SetText("");
-    font->SetPosition(300, 300);
+    font->SetPosition(xpos, ypos);
     font->SetVisibility(true);
     font->SetClickFunction(g_onClick);
 
@@ -469,6 +472,12 @@ bool Deeps::Direct3DInitialize(IDirect3DDevice8* lpDevice)
  */
 void Deeps::Direct3DRelease(void)
 {
+    IFontObject* deepsBase = m_AshitaCore->GetFontManager()->GetFontObject("DeepsBackground");
+
+    m_AshitaCore->GetConfigurationManager()->SetConfigValue("Deeps", "xpos", std::to_string(deepsBase->GetPositionX()).c_str());
+    m_AshitaCore->GetConfigurationManager()->SetConfigValue("Deeps", "ypos", std::to_string(deepsBase->GetPositionY()).c_str());
+    m_AshitaCore->GetConfigurationManager()->SaveConfiguration("Deeps");
+
     m_AshitaCore->GetFontManager()->DeleteFontObject("DeepsBackground");
 
     for (int i = 0; i < m_bars; i++)
